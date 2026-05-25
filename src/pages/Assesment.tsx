@@ -1,59 +1,85 @@
 import React, { useState } from 'react';
-import { predictBurnout } from '../services/api';
+import { mlApi, backendApi } from '../services/api';
 
 const Assessment = () => {
   const [formData, setFormData] = useState({
-    Age: 30,
-    Experience: 5,
+    Age: 35,
+    Experience: 10,
     Gender_enc: 1,
     HighRiskFlag: 0,
-    JobRole_enc: 1,
-    WorkHoursPerWeek: 40,
+    JobRole_enc: 2,
+    WorkHoursPerWeek: 45,
     RemoteRatio: 0.5,
     SatisfactionLevel: 70,
-    StressLevel: 50,
-    StressWorkRatio: 0.6,
-    WorkLifeScore: 60,
+    StressLevel: 60,
+    StressWorkRatio: 0.8,
+    WorkLifeScore: 65,
     SeniorEmployee: 0,
-    StressCategory: 1,
+    StressCategory: 2,
     SatisfactionInverse: 30
   });
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<null | { burnout_score: number; risk_level: string }>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: parseFloat(e.target.value) });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const prediction = await predictBurnout(formData);
-    setResult(prediction);
+    setLoading(true);
+    try {
+      // 1. Panggil FastAPI untuk prediksi
+      const predRes = await mlApi.post('/predict', formData);
+      const { burnout_score, risk_level } = predRes.data;
+
+      // 2. Simpan hasil ke backend Express (database)
+      await backendApi.post('/assessment', {
+        user_name: "User", // bisa diubah nanti
+        score: burnout_score,
+        risk_level: risk_level,
+        date: new Date().toISOString()
+      });
+
+      setResult({ burnout_score, risk_level });
+      alert('Assessment saved!');
+    } catch (err) {
+      console.error(err);
+      alert('Error: ' + (err as any).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div>
-      <h1>Burnout Assessment</h1>
-      <form onSubmit={handleSubmit}>
-        {/* Buat 14 input field sesuai nama */}
+    <div className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Burnout Risk Assessment</h1>
+      <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
         {Object.keys(formData).map(key => (
-          <div key={key}>
-            <label>{key}</label>
+          <div key={key} className="flex flex-col">
+            <label className="font-medium text-sm">{key}</label>
             <input
               type="number"
-              name={key}
-              value={formData[key]}
-              onChange={handleChange}
               step="any"
+              name={key}
+              value={formData[key as keyof typeof formData]}
+              onChange={handleChange}
+              className="border rounded p-2"
+              required
             />
           </div>
         ))}
-        <button type="submit">Predict</button>
+        <div className="col-span-2">
+          <button type="submit" disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded">
+            {loading ? 'Predicting...' : 'Predict & Save'}
+          </button>
+        </div>
       </form>
       {result && (
-        <div>
-          <h2>Result</h2>
-          <p>Burnout Score: {result.burnout_score}</p>
-          <p>Risk Level: {result.risk_level}</p>
+        <div className="mt-6 p-4 bg-gray-100 rounded">
+          <h2 className="text-xl font-semibold">Result</h2>
+          <p>Burnout Score: <strong>{result.burnout_score}</strong> / 100</p>
+          <p>Risk Level: <strong>{result.risk_level}</strong></p>
         </div>
       )}
     </div>

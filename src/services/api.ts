@@ -1,19 +1,13 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api'; // nanti backend akan jalan di port 5000
+const ML_API_URL = 'http://localhost:8000/predict';
 
-export const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Interceptor untuk error handling (opsional)
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('API Error:', error.response?.data || error.message);
-    return Promise.reject(error);
+export const predictBurnout = async (data: any) => {
+  try {
+    const response = await axios.post(ML_API_URL, data);
+    return response.data; // { burnout_score, risk_level }
+  } catch (error) {
+    console.error('Prediction error:', error);
+    throw error;
   }
-);
+};

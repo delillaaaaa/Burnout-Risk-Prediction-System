@@ -1,0 +1,19 @@
+Kolom,Tipe,Jenis,Deskripsi
+Age,int,Original,Usia karyawan dalam tahun (22–60)
+Gender,str (Male/Female),Original,Jenis kelamin karyawan
+JobRole,str,Original,Posisi jabatan: Analyst/Engineer/HR/Manager/Sales
+Experience,int,Original,Lama pengalaman kerja dalam tahun (0–39)
+WorkHoursPerWeek,int,Original,Rata-rata jam kerja per minggu
+RemoteRatio,int (%),Original,Persentase waktu kerja remote (0–100)
+SatisfactionLevel,float (1.0–5.0),Original,"Skor kepuasan kerja (1=sangat tidak puas, 5=sangat puas)"
+StressLevel,int (1–10),Original,"Tingkat stres kerja (1=sangat rendah, 10=sangat tinggi)"
+Burnout,int (0/1),Target,"Label target: 0=Tidak Burnout, 1=Burnout"
+RiskLevel,str (Rendah/Sedang/Tinggi),Rekayasa,Klasifikasi risiko multi-kelas berbasis aturan skor
+Gender_enc,int (0/1),Rekayasa,"Encoding Label: Female=0, Male=1"
+JobRole_enc,int (0–4),Rekayasa,Encoding Label untuk JobRole (0–4)
+StressWorkRatio,float,Rekayasa,StressLevel / (WorkHoursPerWeek+1): intensitas stres per jam kerja
+WorkLifeScore,float,Rekayasa,SatisfactionLevel × (1 – RemoteRatio/100): skor keseimbangan kerja-hidup
+HighRiskFlag,int (0/1),Rekayasa,1 jika StressLevel≥7 AND WorkHoursPerWeek≥50
+SeniorEmployee,int (0/1),Rekayasa,1 jika Experience≥10 tahun
+StressCategory,int (0/1/2),Rekayasa,"Kategori stres: 0=Rendah, 1=Sedang, 2=Tinggi"
+SatisfactionInverse,float,Rekayasa,5 - SatisfactionLevel: mengukur ketidakpuasan kerja
